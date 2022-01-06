@@ -36,7 +36,7 @@ if (!isExist) {
 }
 
 const list = require(configPath).map((item) => {
-  const { serversPath } = item;
+  let { serversPath, mockFolder } = item;
 
   if (!item.hook) {
     item.hook = { customFunctionName };
@@ -44,9 +44,16 @@ const list = require(configPath).map((item) => {
     item.hook.customFunctionName = customFunctionName;
   }
 
+  serversPath = resolve(configPath, '../', serversPath);
+
+  if (mockFolder) {
+    mockFolder = resolve(configPath, '../', mockFolder);
+  }
+
   return {
     ...item,
-    serversPath: resolve(configPath, '../', serversPath),
+    serversPath,
+    mockFolder,
   };
 });
 
