@@ -89,7 +89,6 @@ const getType = (schemaObject: SchemaObject | undefined, namespace: string = '')
   let { type } = schemaObject as any;
 
   const numberEnum = [
-    'int64',
     'integer',
     'long',
     'float',
@@ -99,7 +98,6 @@ const getType = (schemaObject: SchemaObject | undefined, namespace: string = '')
     'float',
     'double',
     'int32',
-    'int64',
   ];
 
   const dateEnum = ['Date', 'date', 'dateTime', 'date-time', 'datetime'];
@@ -112,6 +110,10 @@ const getType = (schemaObject: SchemaObject | undefined, namespace: string = '')
 
   if (schemaObject.enum) {
     type = 'enum';
+  }
+
+  if (schemaObject.format === 'int64') {
+    return 'string';
   }
 
   if (numberEnum.includes(type)) {
