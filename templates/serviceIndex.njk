@@ -4,6 +4,7 @@
 // API 唯一标识：{{ apiResourceId }}
 {% for api in list -%}
 import * as {{ api.controllerName }} from './{{ api.fileName }}'
+export * from './{{ api.fileName }}'
 {% endfor -%}
 
 

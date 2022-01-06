@@ -740,7 +740,11 @@ class ServiceGenerator {
             {
               typeName: resolveTypeName(
                 `${namespace}${
-                  this.config?.hook?.customFunctionName?.(operationObject) ??
+                  this.config?.hook?.customFunctionName?.({
+                    path: p,
+                    method,
+                    ...operationObject,
+                  }) ??
                   operationObject.operationId
                 }Params`,
               ),
