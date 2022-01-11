@@ -113,11 +113,40 @@ function primitive(schemaParams, propsName) {
   return schema.example;
 }
 
+interface CustomGenerateItem {
+  check: (schema: any) => boolean | string;
+  type: 'object';
+  transform: (
+    result: Record<string, any>,
+    props: Record<string, any>,
+  ) => Record<string, any> | Record<string, any>;
+}
 class OpenAPIGeneratorMockJs {
   protected openAPI: any;
-  constructor(openAPI) {
+
+  private customGenerateList: CustomGenerateItem[] = [];
+
+  constructor(openAPI, cgl?: CustomGenerateItem[]) {
     this.openAPI = openAPI;
     this.sampleFromSchema = memoizee(this.sampleFromSchema);
+
+    if (cgl?.length) {
+      this.customGenerateList = cgl;
+    }
+  }
+
+  public addCustomGenerateItem(v: CustomGenerateItem, position: 'push' | 'unshift') {
+    this.customGenerateList[position](v);
+  }
+
+  public delCustomGenerateItem(v: CustomGenerateItem) {
+    const index = this.customGenerateList.findIndex((item) => {
+      return item === v;
+    });
+
+    if (index >= 0) {
+      this.customGenerateList.splice(index, 1);
+    }
   }
 
   sampleFromSchema = (schema: any, propsName?: string[]) => {
@@ -141,9 +170,42 @@ class OpenAPIGeneratorMockJs {
     if (type === 'object') {
       const props = utils.objectify(properties);
       const obj: Record<string, any> = {};
+
       for (const name in props) {
         obj[name] = this.sampleFromSchema(props[name], [...(propsName || []), name]);
       }
+
+      this.customGenerateList.forEach(({ check, type: t, transform }) => {
+        if (t !== type) {
+          return;
+        }
+
+        let checkFn;
+        if (typeof check === 'string') {
+          checkFn = () => {
+            return schema.$ref === check;
+          };
+        } else {
+          checkFn = check;
+        }
+        if (!checkFn(schema, props, obj)) {
+          return;
+        }
+
+        let transformFn;
+        if (typeof transform === 'function') {
+          transformFn = transform;
+        } else {
+          transformFn = () => {
+            Object.entries(transform).forEach(([key, value]) => {
+              if (props[key]) {
+                obj[key] = value;
+              }
+            });
+          };
+        }
+        transformFn(props, obj);
+      });
 
       if (additionalProperties === true) {
         obj.additionalProp1 = {};
@@ -187,8 +249,8 @@ class OpenAPIGeneratorMockJs {
           const response = api.responses[code];
           const schema =
             response.content &&
-            response.content['application/json'] &&
-            utils.inferSchema(response.content['application/json']);
+            response.content['*/*'] &&
+            utils.inferSchema(response.content['*/*']);
 
           if (schema) {
             response.example = schema ? this.sampleFromSchema(schema) : null;
@@ -205,4 +267,5 @@ class OpenAPIGeneratorMockJs {
   };
 }
 
+export type { CustomGenerateItem };
 export default OpenAPIGeneratorMockJs;

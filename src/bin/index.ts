@@ -57,8 +57,6 @@ const list = require(configPath).map((item) => {
   };
 });
 
-console.log('==================', { isExist, list });
-
 list.forEach((config) => {
   generateService(config);
 });

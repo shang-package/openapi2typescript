@@ -58,6 +58,9 @@ export type GenerateServiceProps = {
    * 模板文件的文件路径
    */
   templatesFolder?: string;
+
+  customGenerateList?: any[];
+  mockPathPrefix?: string;
 };
 
 const converterSwaggerToOpenApi = (swagger: any) => {
@@ -105,6 +108,8 @@ export const generateService = async ({
   requestLibPath,
   schemaPath,
   mockFolder,
+  customGenerateList,
+  mockPathPrefix = '',
   ...rest
 }: GenerateServiceProps) => {
   const openAPI = await getOpenAPIConfig(schemaPath);
@@ -123,6 +128,8 @@ export const generateService = async ({
     await mockGenerator({
       openAPI,
       mockFolder: mockFolder || './mocks/',
+      customGenerateList,
+      mockPathPrefix,
     });
   }
 };
