@@ -50,6 +50,10 @@ const list = require(configPath).map((item) => {
     mockFolder = resolve(configPath, '../', mockFolder);
   }
 
+  if (item.mock === false) {
+    mockFolder = undefined;
+  }
+
   return {
     ...item,
     serversPath,

@@ -188,7 +188,7 @@ class OpenAPIGeneratorMockJs {
         } else {
           checkFn = check;
         }
-        if (!checkFn(schema, props, obj)) {
+        if (!checkFn || !checkFn(schema, props, obj)) {
           return;
         }
 

@@ -95,6 +95,12 @@ Mock.Random.extend({
     const id = (Math.random() * href.length).toFixed();
     return href[id];
   },
+  latitude_string() {
+    return `${39.909187 + Math.random() / 300}`;
+  },
+  longitude_string() {
+    return `${116.397451 + Math.random() / 300}`;
+  },
 });
 
 const genMockData = (example: string) => {
