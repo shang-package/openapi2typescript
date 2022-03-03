@@ -188,7 +188,8 @@ class OpenAPIGeneratorMockJs {
         } else {
           checkFn = check;
         }
-        if (!checkFn || !checkFn(schema, props, obj)) {
+
+        if (!(checkFn === true || (typeof checkFn === 'function' && checkFn(schema, props, obj)))) {
           return;
         }
 
@@ -204,7 +205,7 @@ class OpenAPIGeneratorMockJs {
             });
           };
         }
-        transformFn(props, obj);
+        transformFn(schema, props, obj);
       });
 
       if (additionalProperties === true) {

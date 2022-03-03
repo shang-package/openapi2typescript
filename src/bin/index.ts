@@ -2,31 +2,7 @@
 
 import { existsSync } from 'fs';
 import { resolve } from 'path';
-import { generateService } from '../index';
-
-function toUpperFirstLetter(text: string) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
-}
-
-function toLowerFirstLetter(text: string) {
-  return text.charAt(0).toLowerCase() + text.slice(1);
-}
-
-function customFunctionName(arg) {
-  const { path, method, operationId } = arg;
-
-  if (!path) {
-    return operationId;
-  }
-
-  const tmp = [...path.replace(/[{}]/g, '').split('/'), method]
-    .map((v) => {
-      return toUpperFirstLetter(v);
-    })
-    .join('');
-
-  return toLowerFirstLetter(tmp);
-}
+import { generate } from '../index';
 
 const configPath = resolve(process.cwd(), process.argv[2]);
 const isExist = existsSync(configPath);
@@ -35,32 +11,8 @@ if (!isExist) {
   throw new Error(`${configPath} not exists`);
 }
 
-const list = require(configPath).map((item) => {
-  let { serversPath, mockFolder } = item;
+console.log(configPath);
 
-  if (!item.hook) {
-    item.hook = { customFunctionName };
-  } else if (!item.hook.customFunctionName && item.hook.customFunctionName !== false) {
-    item.hook.customFunctionName = customFunctionName;
-  }
+const openapiConfig = require(configPath);
 
-  serversPath = resolve(configPath, '../', serversPath);
-
-  if (mockFolder) {
-    mockFolder = resolve(configPath, '../', mockFolder);
-  }
-
-  if (item.mock === false) {
-    mockFolder = undefined;
-  }
-
-  return {
-    ...item,
-    serversPath,
-    mockFolder,
-  };
-});
-
-list.forEach((config) => {
-  generateService(config);
-});
+generate(configPath, openapiConfig).catch(console.error);

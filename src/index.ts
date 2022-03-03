@@ -1,11 +1,11 @@
 /* eslint-disable global-require */
-/* eslint-disable import/no-dynamic-require */
-import type { OperationObject } from 'openapi3-ts';
 import fetch from 'node-fetch';
+import type { OperationObject } from 'openapi3-ts';
+import { resolve } from 'path';
 import converter from 'swagger2openapi';
-import { ServiceGenerator } from './serviceGenerator';
-import { mockGenerator } from './mockGenerator';
 import Log from './log';
+import { mockGenerator } from './mockGenerator';
+import { ServiceGenerator } from './serviceGenerator';
 
 const getImportStatement = (requestLibPath: string) => {
   if (requestLibPath && requestLibPath.startsWith('import')) {
@@ -67,14 +67,14 @@ const converterSwaggerToOpenApi = (swagger: any) => {
   if (!swagger.swagger) {
     return swagger;
   }
-  return new Promise((resolve, reject) => {
+  return new Promise((rs, rj) => {
     converter.convertObj(swagger, {}, (err, options) => {
       Log(['💺 将 Swagger 转化为 openAPI']);
       if (err) {
-        reject(err);
+        rj(err);
         return;
       }
-      resolve(options.openapi);
+      rs(options.openapi);
     });
   });
 };
@@ -133,3 +133,63 @@ export const generateService = async ({
     });
   }
 };
+
+function toUpperFirstLetter(text: string) {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+function toLowerFirstLetter(text: string) {
+  return text.charAt(0).toLowerCase() + text.slice(1);
+}
+
+function customFunctionName(arg) {
+  const { path, method, operationId } = arg;
+
+  if (!path) {
+    return operationId;
+  }
+
+  const tmp = [...path.replace(/[{}]/g, '').split('/'), method]
+    .map((v) => {
+      return toUpperFirstLetter(v);
+    })
+    .join('');
+
+  return toLowerFirstLetter(tmp);
+}
+
+function generate(configPath: string, openapiConfig: any[]) {
+  const list = openapiConfig.map((item) => {
+    let { serversPath, mockFolder } = item;
+
+    if (!item.hook) {
+      item.hook = { customFunctionName };
+    } else if (!item.hook.customFunctionName && item.hook.customFunctionName !== false) {
+      item.hook.customFunctionName = customFunctionName;
+    }
+
+    serversPath = resolve(configPath, '../', serversPath);
+
+    if (mockFolder) {
+      mockFolder = resolve(configPath, '../', mockFolder);
+    }
+
+    if (item.mock === false) {
+      mockFolder = undefined;
+    }
+
+    return {
+      ...item,
+      serversPath,
+      mockFolder,
+    };
+  });
+
+  return Promise.all(
+    list.map((config) => {
+      return generateService(config);
+    }),
+  );
+}
+
+export { generate };

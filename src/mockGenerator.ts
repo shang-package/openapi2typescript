@@ -7,6 +7,16 @@ import type { CustomGenerateItem } from './openAPIParserMock/index';
 import OpenAPIParserMock from './openAPIParserMock/index';
 import { prettierFile, writeFile } from './util';
 
+function rangeRandom(min, max, round = false) {
+  const v = Math.random() * (max - min) + min;
+
+  if (round) {
+    return Math.round(v);
+  }
+
+  return v;
+}
+
 Mock.Random.extend({
   country() {
     const data = [
@@ -95,11 +105,13 @@ Mock.Random.extend({
     const id = (Math.random() * href.length).toFixed();
     return href[id];
   },
+
+  // 中国的经纬度范围大约为：纬度3.86至53.55，经度73.66至135.05
   latitude_string() {
-    return `${39.909187 + Math.random() / 300}`;
+    return `${rangeRandom(30, 40)}`;
   },
   longitude_string() {
-    return `${116.397451 + Math.random() / 300}`;
+    return `${rangeRandom(100, 110)}`;
   },
 });
 
